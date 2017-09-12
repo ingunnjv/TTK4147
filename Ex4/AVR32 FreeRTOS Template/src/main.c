@@ -165,6 +165,11 @@ User decelerations
 *********************************************************************/
 
 static void vBasicTask(void *pvParameters);
+static void vTaskA(void *pvParameters);
+static void vTaskB(void *pvParameters);
+static void vTestA(void *pvParameters);
+static void vTestB(void *pvParameters);
+static void vTestC(void *pvParameters);
 
 /*********************************************************************
 Functions
@@ -174,10 +179,23 @@ int main()
 	// initialize
 	init();
 	
+	gpio_configure_pin (TEST_A, GPIO_DIR_INPUT);
+	gpio_configure_pin (TEST_B, GPIO_DIR_INPUT);
+	gpio_configure_pin (TEST_C, GPIO_DIR_INPUT);
+	gpio_configure_pin (RESPONSE_A, GPIO_DIR_OUTPUT | GPIO_INIT_HIGH);
+	gpio_configure_pin (RESPONSE_B, GPIO_DIR_OUTPUT | GPIO_INIT_HIGH);
+	gpio_configure_pin (RESPONSE_C, GPIO_DIR_OUTPUT | GPIO_INIT_HIGH);
+	
 	// start code from here
 	
+	gpio_set_pin_high(RESPONSE_A);
+	gpio_set_pin_high(RESPONSE_B);
+	gpio_set_pin_high(RESPONSE_C);
+	
 	// start basic task
-	xTaskCreate( vBasicTask, (signed char * ) "BASIC", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+	xTaskCreate( vTestA, (signed char * ) "BASIC", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+	xTaskCreate( vTestB, (signed char * ) "BASIC", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+	xTaskCreate( vTestC, (signed char * ) "BASIC", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
 
 	// Start the scheduler, anything after this will not run.
 	vTaskStartScheduler();
@@ -193,5 +211,79 @@ static void vBasicTask(void *pvParameters)
 		printf("tick\n");
 		
 		vTaskDelay(xDelay);
+	}
+}
+
+// Assignment A:
+static void vTaskA(void *pvParameters)
+{
+	const portTickType xDelay = 200 / portTICK_RATE_MS;
+	
+	while(1)
+	{
+		gpio_toggle_pin(LED0_GPIO);
+		
+		vTaskDelay(xDelay);
+	}
+}
+
+static void vTaskB(void *pvParameters)
+{
+	const portTickType xDelay = 500 / portTICK_RATE_MS;
+	
+	while(1)
+	{
+		gpio_toggle_pin(LED1_GPIO);
+		
+		vTaskDelay(xDelay);
+	}
+}
+
+// Assignment B:
+static void vTestA(void *pvParameters)
+{
+	const portTickType xDelay = 1 / portTICK_RATE_MS;
+	
+	while(1)
+	{
+		if(gpio_pin_is_low(TEST_A)){
+			gpio_set_pin_low(RESPONSE_A);
+			
+			vTaskDelay(xDelay);
+			
+			gpio_set_pin_high(RESPONSE_A);
+		}
+	}
+}
+
+static void vTestB(void *pvParameters)
+{
+	const portTickType xDelay = 1 / portTICK_RATE_MS;
+	
+	while(1)
+	{
+		if(gpio_pin_is_low(TEST_B)){
+			gpio_set_pin_low(RESPONSE_B);
+			
+			vTaskDelay(xDelay);
+			
+			gpio_set_pin_high(RESPONSE_B);
+		}
+	}
+}
+
+static void vTestC(void *pvParameters)
+{
+	const portTickType xDelay = 1 / portTICK_RATE_MS;
+	
+	while(1)
+	{
+		if(gpio_pin_is_low(TEST_C)){
+			gpio_set_pin_low(RESPONSE_C);
+			
+			vTaskDelay(xDelay);
+			
+			gpio_set_pin_high(RESPONSE_C);
+		}
 	}
 }
